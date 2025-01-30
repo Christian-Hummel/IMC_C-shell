@@ -5,10 +5,10 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2
 
 # Define the target executable name
-TARGET = posix_assignment
+TARGET = shell
 
 # Define the source files
-SRC = posix_assignment.c
+SRC = shell.c
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
