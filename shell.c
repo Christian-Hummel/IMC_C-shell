@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <string.h>
 
 
@@ -30,8 +31,10 @@ int main(){
     while (1){
 
         if (fgets(input, sizeof(input), stdin) == 0){
+
             printf("Error reading input");
             break;
+
         } else {
 
             // remove newline character at the end
@@ -62,13 +65,16 @@ int main(){
 
                 } else if (pid == 0) {
 
-                    printf("Child process");
+                    printf("Child process\n");
 
                     // define pointer to a character array
                     char *argument_array[1024];
                         
                     // index for argument_array
                     int i = 0;
+
+                    // variable for storing filepath for > command 
+                    char filepath[128];
 
                     while(token != NULL){
 
@@ -86,6 +92,11 @@ int main(){
                             if (strcmp(filemod,token) == 0){
 
                                 sfile = 1;
+
+                                token = strtok(NULL, delimiter);
+
+                                strcpy(filepath, token);
+
                             }
 
                             else if (strcmp(background,token) == 0){
@@ -116,7 +127,20 @@ int main(){
                     if (exe == 1 && sfile == 1 && bg == 0){
 
                         printf("File modifier\n");
-                        break;
+
+                        printf("Filepath %s\n", filepath);
+
+                        int file = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777);
+
+                        dup2(file, STDOUT_FILENO);
+                        close(file);
+
+                        if (file == -1){
+                            return 1;
+                        } else {
+                            execvp(argument_array[0], argument_array);
+                        }
+
 
                     } else if (exe == 1 && sfile == 0 && bg == 1) {
 
@@ -134,19 +158,18 @@ int main(){
 
                     if (sfile == 1){
 
-                        printf("Store result in file with dup2 system call");
+                        wait(NULL);
                         printf("Process finished with ID %d\n", pid);
 
                     } else if (bg == 1){
 
-                        printf("No wait call needed");
+                        printf("No wait call needed\n");
                         printf("Process finished with ID %d\n", pid);
                             
                     } else {
 
-                    wait(NULL);
-                    printf("Parent procees\n");
-                    printf("Process finished with ID %d\n", pid);
+                        wait(NULL);
+                        printf("Process finished with ID %d\n", pid);
 
                     }
 
