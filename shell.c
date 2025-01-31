@@ -10,12 +10,18 @@
 int main(){
 
     // initialize variables for comparison
-    const char version[128] = "IMCSH Version 1.0 created by Alexander Berger and Christian Hummel";
+    const char version[] = "version";
     const char execute[] = "exec";
     const char filemod[] = ">";
     const char background[] = "&";
     const char quit[] = "quit";
     const char delimiter[] = " ";
+
+    // initialize flags for modifiers and commands
+
+    int exe = 0;
+    int sfile = 0;
+    int bg = 0;
     
     // initialize input buffer
     char input[128];
@@ -31,79 +37,131 @@ int main(){
             // remove newline character at the end
             input[strcspn(input, "\n")] = 0;
 
-            // set up array for storing options 
-
-            char* argument_list[256] = {"ls","-a",NULL};
-
-            char * token = strtok(input, delimiter);
+            char *token = strtok(input, delimiter);
 
             if (strcmp(quit,token) == 0){
+                
                 printf("Exiting...\n");
                 break;
+
+            } else if (strcmp(version,token) ==0) {
+
+                printf("IMCSH Version 1.0 created by Alexander Berger and Christian Hummel\n");
+
             } else if (strcmp(execute,token) == 0) {
-                
-                // call strtok function again to skip exec
-                token = strtok(NULL, delimiter);
 
-                // define pointer to a character array
-                char * argument_array[1024];
-                int i = 0;
+                // call fork to start child process 
 
-                while(token != NULL){
+                pid_t pid;
 
-                    if (strcmp(filemod,token) == 0){
-                        printf("filemodifier %s\n",token);
-                    } else if (strcmp(background,token) == 0){
-                        printf("background process modifier %s\n",token);
+                pid = fork();
+
+                if (pid < 0) {
+
+                    fprintf(stderr, "fork failed\n");
+
+                } else if (pid == 0) {
+
+                    printf("Child process");
+
+                    // define pointer to a character array
+                    char *argument_array[1024];
+                        
+                    // index for argument_array
+                    int i = 0;
+
+                    while(token != NULL){
+
+                        if (exe == 0){
+
+                            if(strcmp(execute, token) == 0){
+
+                                printf("Execute command %s\n", token);
+                                exe = 1;
+                            }
+
+                            
+                        } else if (exe == 1){
+
+                            if (strcmp(filemod,token) == 0){
+
+                                sfile = 1;
+                            }
+
+                            else if (strcmp(background,token) == 0){
+
+                                bg = 1;
+                            
+
+                            } else {
+
+                                argument_array[i] = token;
+
+                                i++;
+                            
+                            }
+
+                        }
+
+                        
+                        token = strtok(NULL, delimiter);
+
                     }
 
-                    // printf("Portion %s\n", token);
                     
-                    argument_array[i] = token;
+                    //execute program with > modifier
+                    //run program in background with & modifier
+                    //execute program without modifiers
 
-                    token = strtok(NULL, delimiter);
+                    if (exe == 1 && sfile == 1 && bg == 0){
 
-                    i++;
+                        printf("File modifier\n");
+                        break;
+
+                    } else if (exe == 1 && sfile == 0 && bg == 1) {
+
+                        printf("Background modifier\n");
+                        break;
+
+                    } else {
+
+                        execvp(argument_array[0], argument_array);
+
+                    }
+
+
+                } else {
+
+                    if (sfile == 1){
+
+                        printf("Store result in file with dup2 system call");
+                        printf("Process finished with ID %d\n", pid);
+
+                    } else if (bg == 1){
+
+                        printf("No wait call needed");
+                        printf("Process finished with ID %d\n", pid);
+                            
+                    } else {
+
+                    wait(NULL);
+                    printf("Parent procees\n");
+                    printf("Process finished with ID %d\n", pid);
+
+                    }
+
                     
-                    
-                    // leads to segmentation fault because > is maybe not in the ascii table, that gets used for strcmp()
-                    // printf("Comparing elements: %d %s %s\n", strcmp(portion, argument_list[0]), portion, argument_list[0]);
-
-                }
-
-                // execute command, first element, and options provided by the user
-                execvp(argument_array[0], argument_array);           
+                }       
                   
             } else {
                 printf("Inserted %s\n", input);
             }
 
         }
-            
+
+                    
         
     };
-
-
-    // if (strcmp(portion, argument_list[0]) == 0){
-    //     execvp(portion, argument_list);
-    //     continue;
-    // }
-
-
-    //     int id = fork();
-
-    // if (id < 0) {
-    //     fprintf(stderr, "fork failed\n");
-    // } else if (id == 0) {
-
-    //     printf("Child process\n");
-
-    // } else {
-    //     wait(NULL);
-    //     printf("Parent procees\n");
-        
-
-    // }
 
     return 0;
 }
