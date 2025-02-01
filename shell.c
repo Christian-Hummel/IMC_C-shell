@@ -9,8 +9,8 @@
 
 void handle_sigchld(){
 
-    int pid = waitpid(-1, NULL, WNOHANG);
-    if (pid > 0){
+    int pid;
+    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
         printf("Process finished with ID %d\n", pid);
     }
 
@@ -100,7 +100,7 @@ int main(){
 
                     else if (strcmp(background,token) == 0 && strtok(NULL, delimiter) == NULL){
 
-                        bg = 1;                            
+                        bg = 1;                           
 
                     } else {
 
@@ -115,6 +115,8 @@ int main(){
                     token = strtok(NULL, delimiter);
 
                 }
+
+                argument_array[i] = NULL;
 
 
                 // call fork to start child process 
@@ -189,7 +191,7 @@ int main(){
                     //Parent Process
 
 
-                    if (sfile == 1){
+                    if (sfile == 1 && bg == 0){
 
                         wait(NULL);
 
@@ -199,24 +201,22 @@ int main(){
                         sfile = 0;
                         
 
-                    } else if (bg == 1){
+                    } else if (sfile == 0 && bg == 1){
 
-                        if (sfile == 0){
+                        printf("Background Process\n");
 
-                            printf("Background Process\n");
+                        exe = 0;
+                        bg = 0;
 
-                            exe = 0;
-                            bg = 0;
+                        
 
-                        } else {
+                    } else if (sfile == 1 && bg == 1){
 
-                            printf("Background Process stored in file\n");
+                        printf("Background Process stored in file\n");
 
-                            exe = 0;
-                            bg = 0;
-                            sfile = 0;
-
-                        }
+                        exe = 0;
+                        bg = 0;
+                        sfile = 0;
 
                     } else {
 
