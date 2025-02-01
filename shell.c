@@ -9,13 +9,9 @@
 
 void handle_sigchld(){
 
-    pid_t pid;
-    int stat;
-
-    while((pid = waitpid(-1, &stat, WNOHANG)) > 0){
-
-        printf("signal received by process %d\n", pid);
-
+    int pid = waitpid(-1, NULL, WNOHANG);
+    if (pid > 0){
+        printf("Process finished with ID %d\n", pid);
     }
 
 }
@@ -25,8 +21,6 @@ int main(){
     // set up signal handler
     
     signal(SIGCHLD, &handle_sigchld);
-
-    
 
     // initialize variables for comparison
     const char version[] = "globalusage";
@@ -42,10 +36,8 @@ int main(){
     int sfile = 0;
     int bg = 0;
     
-    // initialize input buffer and status variable
+    // initialize input buffer
     char input[128];
-    int status;
-    
     
     while (1){
 
@@ -81,13 +73,15 @@ int main(){
 
             } else if (strcmp(execute,token) == 0) {
 
+            // parse input string
+
             while(token != NULL){
 
                 if (exe == 0){
 
                     if(strcmp(execute, token) == 0){
 
-                        printf("Execute command %s\n", token);
+                        // printf("Execute command %s\n", token);
                         exe = 1;
                         }
 
@@ -104,10 +98,9 @@ int main(){
 
                         }
 
-                    else if (strcmp(background,token) == 0){
+                    else if (strcmp(background,token) == 0 && strtok(NULL, delimiter) == NULL){
 
-                        bg = 1;
-                            
+                        bg = 1;                            
 
                     } else {
 
@@ -119,7 +112,6 @@ int main(){
 
                     }
 
-                        
                     token = strtok(NULL, delimiter);
 
                 }
@@ -137,17 +129,11 @@ int main(){
 
                 } else if (pid == 0) {
 
-                    printf("Child process\n");
+                    // Child Process
             
-                    //execute program with > modifier
-                    //run program in background with & modifier
-                    //execute program without modifiers
+                    //execute command with > modifier
 
                     if (exe == 1 && sfile == 1 && bg == 0){
-
-                        printf("File modifier\n");
-
-                        printf("Filepath %s\n", filepath);
 
                         int file = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777);
 
@@ -160,12 +146,37 @@ int main(){
                             execvp(argument_array[0], argument_array);
                         }
 
+                    //run command in background with & modifier
 
                     } else if (exe == 1 && sfile == 0 && bg == 1) {
 
-                        printf("Background modifier\n");
-                        break;
+                        // change process group to background
 
+                        setpgid(0, 0);
+
+                        execvp(argument_array[0], argument_array);
+
+                    //run command in background, stored in file
+
+                    } else if (exe == 1 && sfile == 1 && bg == 1){
+
+                        // change process group to background
+
+                        setpgid(0, 0);
+
+                        int file = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777);
+
+                        dup2(file, STDOUT_FILENO);
+                        close(file);
+
+                        if (file == -1){
+                            return 1;
+                        } else {
+                            execvp(argument_array[0], argument_array);
+                        }
+
+                    //execute command without modifiers
+                    
                     } else {
 
                         execvp(argument_array[0], argument_array);
@@ -175,7 +186,7 @@ int main(){
 
                 } else {
 
-                    waitpid(pid, &status, 0);
+                    //Parent Process
 
 
                     if (sfile == 1){
@@ -190,13 +201,23 @@ int main(){
 
                     } else if (bg == 1){
 
-                        printf("No wait call needed\n");
-                        printf("Process finished with ID %d\n", pid);
+                        if (sfile == 0){
 
+                            printf("Background Process\n");
 
-                        exe = 0;
-                        bg = 0;
-                            
+                            exe = 0;
+                            bg = 0;
+
+                        } else {
+
+                            printf("Background Process stored in file\n");
+
+                            exe = 0;
+                            bg = 0;
+                            sfile = 0;
+
+                        }
+
                     } else {
 
                         wait(NULL);
@@ -207,7 +228,6 @@ int main(){
 
                     }
 
-                    
                 }       
                   
             } else {
@@ -215,8 +235,6 @@ int main(){
             }
 
         }
-
-                    
         
     };
 
