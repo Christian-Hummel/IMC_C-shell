@@ -118,6 +118,18 @@ int main(){
 
                 argument_array[i] = NULL;
 
+                // create temporary flags
+
+                int current_sfile = sfile;
+                int current_bg = bg;
+
+
+                // reset flags
+
+                exe = 0;
+                sfile = 0;
+                bg = 0;
+
 
                 // call fork to start child process 
 
@@ -135,7 +147,7 @@ int main(){
             
                     //execute command with > modifier
 
-                    if (exe == 1 && sfile == 1 && bg == 0){
+                    if (current_sfile == 1 && current_bg == 0){
 
                         int file = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777);
 
@@ -150,7 +162,7 @@ int main(){
 
                     //run command in background with & modifier
 
-                    } else if (exe == 1 && sfile == 0 && bg == 1) {
+                    } else if (current_sfile == 0 && current_bg == 1) {
 
                         // change process group to background
 
@@ -160,7 +172,7 @@ int main(){
 
                     //run command in background, stored in file
 
-                    } else if (exe == 1 && sfile == 1 && bg == 1){
+                    } else if (current_sfile == 1 && current_bg == 1){
 
                         // change process group to background
 
@@ -191,40 +203,27 @@ int main(){
                     //Parent Process
 
 
-                    if (sfile == 1 && bg == 0){
+                    if (current_sfile == 1 && current_bg == 0){
 
                         wait(NULL);
 
                         printf("Process finished with ID %d\n", pid);
-
-                        exe = 0;
-                        sfile = 0;
                         
 
-                    } else if (sfile == 0 && bg == 1){
+                    } else if (current_sfile == 0 && current_bg == 1){
 
                         printf("Background Process\n");
-
-                        exe = 0;
-                        bg = 0;
-
                         
 
-                    } else if (sfile == 1 && bg == 1){
+                    } else if (current_sfile == 1 && current_bg == 1){
 
                         printf("Background Process stored in file\n");
-
-                        exe = 0;
-                        bg = 0;
-                        sfile = 0;
 
                     } else {
 
                         wait(NULL);
 
                         printf("Process finished regularly with ID %d\n", pid);
-
-                        exe = 0;
 
                     }
 
