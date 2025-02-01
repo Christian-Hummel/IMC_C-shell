@@ -23,12 +23,17 @@ int main(){
     signal(SIGCHLD, &handle_sigchld);
 
     // initialize variables for comparison
+
     const char version[] = "globalusage";
     const char execute[] = "exec";
     const char filemod[] = ">";
     const char background[] = "&";
     const char quit[] = "quit";
     const char delimiter[] = " ";
+    const char yes[] = "y";
+    const char Yes[] = "Y";
+    const char no[] = "n";
+    const char No[] = "N";
 
     // initialize flags for modifiers and commands
 
@@ -38,6 +43,15 @@ int main(){
     
     // initialize input buffer
     char input[128];
+
+    // initialize array for running background processes
+
+    pid_t bg_processes[128];
+    int bg_count = 0;
+
+    char response[64];
+
+
     
     while (1){
 
@@ -63,9 +77,65 @@ int main(){
             char *token = strtok(input, delimiter);
 
             if (strcmp(quit,token) == 0 && strtok(NULL, delimiter) == NULL){
+
+                if (bg_count > 0){
+
+                    printf("The following processes are running, are you sure you want to quit? [Y/n]\n");
+
+                    int j;
+
+                    for (j = 0; j < bg_count; j++){
+
+                        printf("Background process with pid: %d\n", bg_processes[j]);
+
+                    }
                 
-                printf("Exiting...\n");
-                break;
+
+                    
+
+                    if (fgets(response, sizeof(response), stdin) == 0){
+
+                        printf("Error reading input");
+                        break;
+
+                    } else {
+
+                        response[strcspn(response, "\n")] = 0;
+
+                        // If the response is empty, treat it as 'n' for no
+                        if (strlen(response) == 0) {
+
+                            strcpy(response, "n");
+
+                        }
+
+                        if (strcmp(yes,response) == 0 || strcmp(Yes,response) == 0){
+
+                            printf("Exiting...\n");
+
+                            for (int j = 0; j < bg_count; j++) {
+                            kill(bg_processes[j], SIGKILL);
+                            }
+
+                            break;
+
+                        } else if (strcmp(no,response) == 0 || strcmp(No, response) == 0){
+
+                            printf("Continue execution\n");
+                            
+                        } else {
+
+                            printf("Wrong input, continue execution\n");
+                            
+                        }
+                    }
+
+                } else {
+                    printf("Exiting...\n");
+                    break;
+                }
+                
+                
 
             } else if (strcmp(version,token) ==0 && strtok(NULL, delimiter) == NULL) {
 
@@ -212,18 +282,25 @@ int main(){
 
                     } else if (current_sfile == 0 && current_bg == 1){
 
-                        printf("Background Process\n");
+                        
+                        // printf("Background Process\n");
+                        bg_processes[bg_count] = pid;
+                        bg_count ++;
+                        
                         
 
                     } else if (current_sfile == 1 && current_bg == 1){
 
-                        printf("Background Process stored in file\n");
+                        // printf("Background Process stored in file\n");
+                        bg_processes[bg_count] = pid;
+                        bg_count ++;
+                        
 
                     } else {
 
                         wait(NULL);
 
-                        printf("Process finished regularly with ID %d\n", pid);
+                        printf("Process finished with ID %d\n", pid);
 
                     }
 
