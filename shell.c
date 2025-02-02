@@ -90,9 +90,6 @@ int main(){
 
                     }
                 
-
-                    
-
                     if (fgets(response, sizeof(response), stdin) == 0){
 
                         printf("Error reading input");
@@ -219,6 +216,8 @@ int main(){
 
                     if (current_sfile == 1 && current_bg == 0){
 
+                        // open file - write only | append to the end | create if not exists | set of permissions - all
+
                         int file = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777);
 
                         dup2(file, STDOUT_FILENO);
@@ -280,7 +279,7 @@ int main(){
                         printf("Process finished with ID %d\n", pid);
                         
 
-                    } else if (current_sfile == 0 && current_bg == 1){
+                    } else if ((current_sfile == 0 || current_sfile == 1) && current_bg == 1){
 
                         
                         // printf("Background Process\n");
@@ -288,14 +287,6 @@ int main(){
                         bg_count ++;
                         
                         
-
-                    } else if (current_sfile == 1 && current_bg == 1){
-
-                        // printf("Background Process stored in file\n");
-                        bg_processes[bg_count] = pid;
-                        bg_count ++;
-                        
-
                     } else {
 
                         wait(NULL);
