@@ -136,7 +136,7 @@ int main(){
 
             } else if (strcmp(version,token) ==0 && strtok(NULL, delimiter) == NULL) {
 
-                printf("IMCSH Version 1.0 created by Alexander Berger and Christian Hummel\n");
+                printf("IMCSH Version 1.1 created by Alexander Berger and Christian Hummel\n");
 
             } else if (strcmp(execute,token) == 0) {
 
